@@ -28,10 +28,12 @@ function(configure_bridge target ver)
         ${LUA_CORE_DIR}/*.c
       )
       # Exclude standalone binaries if present
-      list(FILTER LUA_CORE EXCLUDE REGEX ".*/lua(\.c)?$")
-      list(FILTER LUA_CORE EXCLUDE REGEX ".*/luac(\.c)?$")
+      list(FILTER LUA_CORE EXCLUDE REGEX ".*/lua(\\.c)?$")
+      list(FILTER LUA_CORE EXCLUDE REGEX ".*/luac(\\.c)?$")
       target_sources(${target} PRIVATE ${LUADEC_COMMON} ${LUA_CORE})
       target_compile_definitions(${target} PRIVATE LUADEC_HAVE_SOURCES=1)
+      # Expose luadec main() under a versioned name for JNI to call
+      target_compile_definitions(${target} PRIVATE main=luadec${ver}_main)
       if(${ver} EQUAL 51)
         target_compile_definitions(${target} PRIVATE LUA_VERSION_NUM=501)
       elseif(${ver} EQUAL 52)
@@ -39,6 +41,8 @@ function(configure_bridge target ver)
       else()
         target_compile_definitions(${target} PRIVATE LUA_VERSION_NUM=503)
       endif()
+      # Include paths
+      target_include_directories(${target} PRIVATE ${LUADEC_ROOT}/luadec ${LUA_CORE_DIR})
       # Quiet some warnings
       target_compile_options(${target} PRIVATE -Wno-unused-parameter -Wno-sign-compare)
     else()
