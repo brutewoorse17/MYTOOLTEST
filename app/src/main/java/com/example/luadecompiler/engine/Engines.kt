@@ -131,10 +131,12 @@ class LuadecEngine : DecompilerEngine {
 
   override suspend fun decompile(bytes: ByteArray): Result<String> = withContext(Dispatchers.IO) {
     try {
-      val verCode = when {
-        supports(LuaBytecodeVersion.LUA_51) -> 51
-        supports(LuaBytecodeVersion.LUA_52) -> 52
-        else -> 53
+      val detected = LuaDetector.detect(bytes)
+      val verCode = when (detected.version) {
+        LuaBytecodeVersion.LUA_51 -> 51
+        LuaBytecodeVersion.LUA_52 -> 52
+        LuaBytecodeVersion.LUA_53 -> 53
+        else -> return@withContext Result.failure(IllegalArgumentException("Unsupported Lua version for luadec"))
       }
       val out = LuadecNative.decompile(bytes, verCode)
       if (out != null && !out.startsWith("[luadec stub]")) Result.success(out) else Result.failure(UnsupportedOperationException(out ?: "luadec returned null"))
