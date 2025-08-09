@@ -117,13 +117,30 @@ class UnluacEngine : DecompilerEngine {
   }
 }
 
+object LuadecNative {
+  init {
+    try { System.loadLibrary("luadec_bridge") } catch (_: Throwable) {}
+  }
+  external fun decompile(bytes: ByteArray, version: Int): String?
+}
+
 class LuadecEngine : DecompilerEngine {
   override val name: String = "luadec (Lua 5.1–5.3 via NDK)"
   override fun supports(version: LuaBytecodeVersion): Boolean =
     version == LuaBytecodeVersion.LUA_51 || version == LuaBytecodeVersion.LUA_52 || version == LuaBytecodeVersion.LUA_53
 
   override suspend fun decompile(bytes: ByteArray): Result<String> = withContext(Dispatchers.IO) {
-    Result.failure(UnsupportedOperationException("Native luadec not integrated yet"))
+    try {
+      val verCode = when {
+        supports(LuaBytecodeVersion.LUA_51) -> 51
+        supports(LuaBytecodeVersion.LUA_52) -> 52
+        else -> 53
+      }
+      val out = LuadecNative.decompile(bytes, verCode)
+      if (out != null && !out.startsWith("[luadec stub]")) Result.success(out) else Result.failure(UnsupportedOperationException(out ?: "luadec returned null"))
+    } catch (t: Throwable) {
+      Result.failure(t)
+    }
   }
 }
 
