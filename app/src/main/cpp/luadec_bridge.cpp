@@ -5,16 +5,14 @@ extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_luadecompiler_engine_LuadecNative_decompile(
     JNIEnv* env,
     jobject /* thisObj */,
-    jbyteArray byteArray,
+    jbyteArray /*byteArray*/,
     jint version)
 {
-  // TODO: integrate luadec C sources and route by version
-  const char* ver = "unknown";
-  switch (version) {
-    case 51: ver = "5.1"; break;
-    case 52: ver = "5.2"; break;
-    case 53: ver = "5.3"; break;
-  }
-  std::string msg = std::string("[luadec stub] Native support not yet integrated for Lua ") + ver;
+#if defined(LUADEC_VER)
+  int libver = LUADEC_VER;
+#else
+  int libver = 0;
+#endif
+  std::string msg = std::string("[luadec stub] bridge ") + std::to_string(libver) + " received version " + std::to_string(version);
   return env->NewStringUTF(msg.c_str());
 }

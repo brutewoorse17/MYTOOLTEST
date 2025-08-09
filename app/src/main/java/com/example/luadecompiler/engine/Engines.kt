@@ -119,7 +119,9 @@ class UnluacEngine : DecompilerEngine {
 
 object LuadecNative {
   init {
-    try { System.loadLibrary("luadec_bridge") } catch (_: Throwable) {}
+    for (lib in arrayOf("luadec51_bridge","luadec52_bridge","luadec53_bridge")) {
+      try { System.loadLibrary(lib) } catch (_: Throwable) {}
+    }
   }
   external fun decompile(bytes: ByteArray, version: Int): String?
 }
