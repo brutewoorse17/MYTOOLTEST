@@ -1,0 +1,30 @@
+# Gradle
+.gradle/
+**/build/
+**/out/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android Studio
+.idea/
+*.iml
+.cxx/
+.externalNativeBuild/
+
+# Local SDK and config
+local.properties
+/android-sdk/
+
+# Keystore files
+*.jks
+*.keystore
+
+# Logs
+*.log
+
+# APK/AAB outputs
+**/outputs/
+app/release/
+
+# Misc
+.DS_Store
+Thumbs.db
