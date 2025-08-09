@@ -70,23 +70,28 @@ private fun DecompilerScreen() {
       val info = com.example.luadecompiler.engine.LuaDetector.detect(bytes)
       val updated = when {
         !info.isBytecode && info.version == LuaBytecodeVersion.UNKNOWN -> {
-          // Treat as plain text Lua file
           val text = bytes.decodeToString()
           FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Plain text .lua", content = text)
-        }
-        info.version == LuaBytecodeVersion.LUA_51 -> {
-          val result = runBlockingDecompile(bytes, EngineRouter.pick(info.version))
-          FileResult(uri, guessDisplayName(context.contentResolver, uri), status = result.first, content = result.second)
-        }
-        info.version == LuaBytecodeVersion.LUA_52 || info.version == LuaBytecodeVersion.LUA_53 -> {
-          val result = runBlockingDecompile(bytes, EngineRouter.pick(info.version))
-          FileResult(uri, guessDisplayName(context.contentResolver, uri), status = result.first, content = result.second)
         }
         info.version == LuaBytecodeVersion.LUAJIT -> {
           FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "LuaJIT bytecode detected — not supported yet", content = null)
         }
         else -> {
-          FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Unknown/unsupported bytecode", content = null)
+          val engines = com.example.luadecompiler.engine.EngineRouter.enginesFor(info.version)
+          var success: Pair<String, String?>? = null
+          var lastError: String? = null
+          for (engine in engines) {
+            results = results.map { if (it.uri == uri) it.copy(status = "Trying ${engine.name}…") else it }
+            val res = runBlockingDecompile(bytes, engine)
+            if (res.second != null) { success = res; break } else { lastError = res.first }
+          }
+          if (success != null) {
+            FileResult(uri, guessDisplayName(context.contentResolver, uri), status = success!!.first, content = success!!.second)
+          } else if (engines.isEmpty()) {
+            FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Unknown/unsupported bytecode", content = null)
+          } else {
+            FileResult(uri, guessDisplayName(context.contentResolver, uri), status = lastError ?: "Failed to decompile", content = null)
+          }
         }
       }
       results = results.map { if (it.uri == uri) updated else it }

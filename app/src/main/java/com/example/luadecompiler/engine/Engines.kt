@@ -110,13 +110,16 @@ object EngineRouter {
   private val unluac by lazy { UnluacEngine() }
   private val luadec by lazy { LuadecEngine() }
 
-  fun pick(version: LuaBytecodeVersion): DecompilerEngine = when (version) {
-    LuaBytecodeVersion.LUA_51 -> unluac
-    LuaBytecodeVersion.LUA_52, LuaBytecodeVersion.LUA_53 -> luadec
-    else -> object : DecompilerEngine {
-      override val name: String = "unsupported"
-      override fun supports(version: LuaBytecodeVersion): Boolean = false
-      override suspend fun decompile(bytes: ByteArray): Result<String> = Result.failure(UnsupportedOperationException("Unsupported Lua version"))
-    }
+  fun enginesFor(version: LuaBytecodeVersion): List<DecompilerEngine> = when (version) {
+    LuaBytecodeVersion.LUA_51 -> listOf(unluac, luadec)
+    LuaBytecodeVersion.LUA_52, LuaBytecodeVersion.LUA_53 -> listOf(luadec)
+    else -> emptyList()
+  }
+
+  fun unsupported(): DecompilerEngine = object : DecompilerEngine {
+    override val name: String = "unsupported"
+    override fun supports(version: LuaBytecodeVersion): Boolean = false
+    override suspend fun decompile(bytes: ByteArray): Result<String> =
+      Result.failure(UnsupportedOperationException("Unsupported Lua version"))
   }
 }
