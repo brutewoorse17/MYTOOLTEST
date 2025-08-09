@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.LuaDecompiler" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorSurface">@android:color/white</item>
+    </style>
+</resources>
