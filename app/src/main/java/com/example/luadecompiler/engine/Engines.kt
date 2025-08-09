@@ -119,9 +119,13 @@ class UnluacEngine : DecompilerEngine {
 
 object LuadecNative {
   init {
-    try { System.loadLibrary("luadec_bridge") } catch (_: Throwable) {}
+    for (lib in arrayOf("luadec51_bridge","luadec52_bridge","luadec53_bridge")) {
+      try { System.loadLibrary(lib) } catch (_: Throwable) {}
+    }
   }
-  external fun decompile(path: String, version: Int): String?
+  external fun decompile51(path: String): String?
+  external fun decompile52(path: String): String?
+  external fun decompile53(path: String): String?
 }
 
 class LuadecEngine : DecompilerEngine {
@@ -132,15 +136,14 @@ class LuadecEngine : DecompilerEngine {
   override suspend fun decompile(bytes: ByteArray): Result<String> = withContext(Dispatchers.IO) {
     try {
       val detected = LuaDetector.detect(bytes)
-      val verCode = when (detected.version) {
-        LuaBytecodeVersion.LUA_51 -> 51
-        LuaBytecodeVersion.LUA_52 -> 52
-        LuaBytecodeVersion.LUA_53 -> 53
-        else -> return@withContext Result.failure(IllegalArgumentException("Unsupported Lua version for luadec"))
-      }
       val temp = kotlin.io.path.createTempFile(prefix = "chunk", suffix = ".luac").toFile()
       temp.writeBytes(bytes)
-      val out = LuadecNative.decompile(temp.absolutePath, verCode)
+      val out = when (detected.version) {
+        LuaBytecodeVersion.LUA_51 -> LuadecNative.decompile51(temp.absolutePath)
+        LuaBytecodeVersion.LUA_52 -> LuadecNative.decompile52(temp.absolutePath)
+        LuaBytecodeVersion.LUA_53 -> LuadecNative.decompile53(temp.absolutePath)
+        else -> null
+      }
       temp.delete()
       if (out != null && !out.startsWith("[luadec stub]")) Result.success(out) else Result.failure(UnsupportedOperationException(out ?: "luadec returned null"))
     } catch (t: Throwable) {
