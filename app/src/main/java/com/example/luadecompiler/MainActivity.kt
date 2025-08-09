@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -23,7 +24,6 @@ import kotlinx.coroutines.launch
 import com.example.luadecompiler.engine.EngineRouter
 import com.example.luadecompiler.engine.LuaBytecodeVersion
 import com.example.luadecompiler.engine.LuaDetector
-import com.example.luadecompiler.engine.DecompilerEngine
 import androidx.compose.runtime.rememberCoroutineScope
 
 class MainActivity : ComponentActivity() {
@@ -54,82 +54,110 @@ private data class FileResult(
 private fun DecompilerScreen() {
   val context = LocalContext.current
   var results by remember { mutableStateOf(listOf<FileResult>()) }
+  var isProcessing by remember { mutableStateOf(false) }
   val scope = rememberCoroutineScope()
 
   val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
     if (uris.isNullOrEmpty()) return@rememberLauncherForActivityResult
+
+    // Filter only .lua or .luac by filename
+    val filtered = uris.filter { uri ->
+      val name = guessDisplayName(context.contentResolver, uri).lowercase()
+      name.endsWith(".lua") || name.endsWith(".luac")
+    }
+
     results = listOf() // reset
-    uris.forEach { uri ->
+    filtered.forEach { uri ->
       results = results + FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Queued…")
     }
 
     // Process sequentially in a coroutine
     scope.launch {
-      for (uri in uris) {
-        results = results.map {
-          if (it.uri == uri) it.copy(status = "Reading…") else it
-        }
-        val bytes = withContext(Dispatchers.IO) { readAllBytes(context.contentResolver, uri) }
-        val info = com.example.luadecompiler.engine.LuaDetector.detect(bytes)
-        val updated = when {
-          !info.isBytecode && info.version == LuaBytecodeVersion.UNKNOWN -> {
-            val text = bytes.decodeToString()
-            FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Plain text .lua", content = text)
+      isProcessing = true
+      try {
+        for (uri in filtered) {
+          results = results.map {
+            if (it.uri == uri) it.copy(status = "Reading…") else it
           }
-          info.version == LuaBytecodeVersion.LUAJIT -> {
-            FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "LuaJIT bytecode detected — not supported yet", content = null)
-          }
-          else -> {
-            val engines = com.example.luadecompiler.engine.EngineRouter.enginesFor(info.version)
-            var success: Pair<String, String?>? = null
-            var lastError: String? = null
-            for (engine in engines) {
-              results = results.map { if (it.uri == uri) it.copy(status = "Trying ${engine.name}…") else it }
-              val res = runBlockingDecompile(bytes, engine)
-              if (res.second != null) { success = res; break } else { lastError = res.first }
+          val bytes = withContext(Dispatchers.IO) { readAllBytes(context.contentResolver, uri) }
+          val info = LuaDetector.detect(bytes)
+          val updated = when {
+            !info.isBytecode && info.version == LuaBytecodeVersion.UNKNOWN -> {
+              val text = bytes.decodeToString()
+              FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Plain text .lua", content = text)
             }
-            if (success != null) {
-              FileResult(uri, guessDisplayName(context.contentResolver, uri), status = success!!.first, content = success!!.second)
-            } else if (engines.isEmpty()) {
-              FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Unknown/unsupported bytecode", content = null)
-            } else {
-              FileResult(uri, guessDisplayName(context.contentResolver, uri), status = lastError ?: "Failed to decompile", content = null)
+            info.version == LuaBytecodeVersion.LUAJIT -> {
+              FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "LuaJIT bytecode detected — not supported yet", content = null)
+            }
+            else -> {
+              val engines = EngineRouter.enginesFor(info.version)
+              var success: Pair<String, String?>? = null
+              var lastError: String? = null
+              for (engine in engines) {
+                results = results.map { if (it.uri == uri) it.copy(status = "Trying ${engine.name}…") else it }
+                val res = runBlockingDecompile(bytes, engine)
+                if (res.second != null) { success = res; break } else { lastError = res.first }
+              }
+              if (success != null) {
+                FileResult(uri, guessDisplayName(context.contentResolver, uri), status = success!!.first, content = success!!.second)
+              } else if (engines.isEmpty()) {
+                FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Unknown/unsupported bytecode", content = null)
+              } else {
+                FileResult(uri, guessDisplayName(context.contentResolver, uri), status = lastError ?: "Failed to decompile", content = null)
+              }
             }
           }
+          results = results.map { if (it.uri == uri) updated else it }
         }
-        results = results.map { if (it.uri == uri) updated else it }
+      } finally {
+        isProcessing = false
       }
     }
   }
 
-  Column(Modifier.padding(16.dp).fillMaxSize()) {
-    Text("Lua Decompiler", style = MaterialTheme.typography.headlineMedium)
-    Spacer(Modifier.height(12.dp))
-    Button(onClick = {
-      launcher.launch(arrayOf("*/*"))
-    }) { Text("Pick .lua / .luac files") }
+  Box(Modifier.fillMaxSize()) {
+    Column(Modifier.padding(16.dp).fillMaxSize()) {
+      Text("Lua Decompiler", style = MaterialTheme.typography.headlineMedium)
+      Spacer(Modifier.height(12.dp))
+      Button(onClick = {
+        launcher.launch(arrayOf("text/x-lua","text/plain","application/octet-stream"))
+      }) { Text("Pick .lua / .luac files") }
 
-    Spacer(Modifier.height(16.dp))
+      Spacer(Modifier.height(16.dp))
 
-    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-      results.forEach { res ->
-        Card(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-          Column(Modifier.padding(12.dp)) {
-            Text(res.displayName, style = MaterialTheme.typography.titleMedium)
-            Text(res.status, style = MaterialTheme.typography.bodySmall)
-            if (res.content != null) {
-              Spacer(Modifier.height(8.dp))
-              Text(res.content, fontFamily = FontFamily.Monospace)
-              Spacer(Modifier.height(8.dp))
-              Row {
-                val ctx = LocalContext.current
-                Button(onClick = { shareText(ctx, res.content, res.displayName.removeSuffix(".luac") + ".lua") }) {
-                  Text("Share")
+      Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+        results.forEach { res ->
+          Card(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+            Column(Modifier.padding(12.dp)) {
+              Text(res.displayName, style = MaterialTheme.typography.titleMedium)
+              Text(res.status, style = MaterialTheme.typography.bodySmall)
+              if (res.content != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(res.content, fontFamily = FontFamily.Monospace)
+                Spacer(Modifier.height(8.dp))
+                Row {
+                  val ctx = LocalContext.current
+                  Button(onClick = { shareText(ctx, res.content, res.displayName.removeSuffix(".luac") + ".lua") }) {
+                    Text("Share")
+                  }
                 }
               }
             }
           }
         }
+      }
+    }
+
+    if (isProcessing) {
+      Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)) {}
+      Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+      ) {
+        CircularProgressIndicator()
+        Spacer(Modifier.height(12.dp))
+        Text("Processing…")
       }
     }
   }

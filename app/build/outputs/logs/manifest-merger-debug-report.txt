@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /workspace/app/src/main/AndroidManifest.xml:2:1-17:12
-INJECTED from /workspace/app/src/main/AndroidManifest.xml:2:1-17:12
-INJECTED from /workspace/app/src/main/AndroidManifest.xml:2:1-17:12
-INJECTED from /workspace/app/src/main/AndroidManifest.xml:2:1-17:12
+ADDED from /workspace/app/src/main/AndroidManifest.xml:2:1-19:12
+INJECTED from /workspace/app/src/main/AndroidManifest.xml:2:1-19:12
+INJECTED from /workspace/app/src/main/AndroidManifest.xml:2:1-19:12
+INJECTED from /workspace/app/src/main/AndroidManifest.xml:2:1-19:12
 MERGED from [com.google.android.material:material:1.12.0] /home/ubuntu/.gradle/caches/transforms-4/30dbe09adc47a6fa3161e128d9fbb6b2/transformed/material-1.12.0/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /home/ubuntu/.gradle/caches/transforms-4/3284b1fe802a3f384d6e1862779d2989/transformed/constraintlayout-2.0.1/AndroidManifest.xml:2:1-11:12
 MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /home/ubuntu/.gradle/caches/transforms-4/9f152211f368ddf8b167627d72946a31/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:17:1-22:12
@@ -60,6 +60,7 @@ MERGED from [androidx.lifecycle:lifecycle-runtime-ktx-android:2.8.4] /home/ubunt
 MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.8.4] /home/ubuntu/.gradle/caches/transforms-4/3037873078978c6f3b85bd62d9d713f9/transformed/lifecycle-viewmodel-savedstate-2.8.4/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] /home/ubuntu/.gradle/caches/transforms-4/ca320cc04769201d96ae35a18d4b1c24/transformed/customview-poolingcontainer-1.0.0/AndroidManifest.xml:17:1-23:12
 MERGED from [androidx.core:core-ktx:1.13.1] /home/ubuntu/.gradle/caches/transforms-4/ee0481a11330c26fe06a00831ef0481b/transformed/core-ktx-1.13.1/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.core:core-splashscreen:1.0.1] /home/ubuntu/.gradle/caches/transforms-4/08a5c87c8b8ae2e447c478574aaf3a93/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.annotation:annotation-experimental:1.4.0] /home/ubuntu/.gradle/caches/transforms-4/b602daaf2448be52ca00da64464dbe99/transformed/annotation-experimental-1.4.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.compose.runtime:runtime-saveable-android:1.6.8] /home/ubuntu/.gradle/caches/transforms-4/6bef251489f0fc420fa1f568442a9df9/transformed/runtime-saveable-release/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.compose.runtime:runtime-android:1.6.8] /home/ubuntu/.gradle/caches/transforms-4/06c3170746c2eac97a8eec0026d54956/transformed/runtime-release/AndroidManifest.xml:2:1-7:12
@@ -83,8 +84,8 @@ MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/ubuntu/.gradle/caches/
 	xmlns:android
 		ADDED from /workspace/app/src/main/AndroidManifest.xml:2:11-69
 application
-ADDED from /workspace/app/src/main/AndroidManifest.xml:4:5-16:19
-INJECTED from /workspace/app/src/main/AndroidManifest.xml:4:5-16:19
+ADDED from /workspace/app/src/main/AndroidManifest.xml:4:5-18:19
+INJECTED from /workspace/app/src/main/AndroidManifest.xml:4:5-18:19
 MERGED from [com.google.android.material:material:1.12.0] /home/ubuntu/.gradle/caches/transforms-4/30dbe09adc47a6fa3161e128d9fbb6b2/transformed/material-1.12.0/AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.12.0] /home/ubuntu/.gradle/caches/transforms-4/30dbe09adc47a6fa3161e128d9fbb6b2/transformed/material-1.12.0/AndroidManifest.xml:22:5-20
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /home/ubuntu/.gradle/caches/transforms-4/3284b1fe802a3f384d6e1862779d2989/transformed/constraintlayout-2.0.1/AndroidManifest.xml:9:5-20
@@ -116,21 +117,29 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] /home/ubuntu/.gradle/caches
 	android:theme
 		ADDED from /workspace/app/src/main/AndroidManifest.xml:7:9-51
 activity#com.example.luadecompiler.MainActivity
-ADDED from /workspace/app/src/main/AndroidManifest.xml:8:9-15:20
+ADDED from /workspace/app/src/main/AndroidManifest.xml:8:9-75
 	android:exported
-		ADDED from /workspace/app/src/main/AndroidManifest.xml:10:13-36
+		ADDED from /workspace/app/src/main/AndroidManifest.xml:8:48-72
 	android:name
-		ADDED from /workspace/app/src/main/AndroidManifest.xml:9:13-41
+		ADDED from /workspace/app/src/main/AndroidManifest.xml:8:19-47
+activity#com.example.luadecompiler.SplashActivity
+ADDED from /workspace/app/src/main/AndroidManifest.xml:9:9-17:20
+	android:exported
+		ADDED from /workspace/app/src/main/AndroidManifest.xml:11:13-36
+	android:theme
+		ADDED from /workspace/app/src/main/AndroidManifest.xml:12:13-55
+	android:name
+		ADDED from /workspace/app/src/main/AndroidManifest.xml:10:13-43
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from /workspace/app/src/main/AndroidManifest.xml:11:13-14:29
+ADDED from /workspace/app/src/main/AndroidManifest.xml:13:13-16:29
 action#android.intent.action.MAIN
-ADDED from /workspace/app/src/main/AndroidManifest.xml:12:17-69
+ADDED from /workspace/app/src/main/AndroidManifest.xml:14:17-69
 	android:name
-		ADDED from /workspace/app/src/main/AndroidManifest.xml:12:25-66
+		ADDED from /workspace/app/src/main/AndroidManifest.xml:14:25-66
 category#android.intent.category.LAUNCHER
-ADDED from /workspace/app/src/main/AndroidManifest.xml:13:17-77
+ADDED from /workspace/app/src/main/AndroidManifest.xml:15:17-77
 	android:name
-		ADDED from /workspace/app/src/main/AndroidManifest.xml:13:27-74
+		ADDED from /workspace/app/src/main/AndroidManifest.xml:15:27-74
 uses-sdk
 INJECTED from /workspace/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /workspace/app/src/main/AndroidManifest.xml
@@ -247,6 +256,8 @@ MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] /home/ubuntu
 MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] /home/ubuntu/.gradle/caches/transforms-4/ca320cc04769201d96ae35a18d4b1c24/transformed/customview-poolingcontainer-1.0.0/AndroidManifest.xml:20:5-21:38
 MERGED from [androidx.core:core-ktx:1.13.1] /home/ubuntu/.gradle/caches/transforms-4/ee0481a11330c26fe06a00831ef0481b/transformed/core-ktx-1.13.1/AndroidManifest.xml:5:5-44
 MERGED from [androidx.core:core-ktx:1.13.1] /home/ubuntu/.gradle/caches/transforms-4/ee0481a11330c26fe06a00831ef0481b/transformed/core-ktx-1.13.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core-splashscreen:1.0.1] /home/ubuntu/.gradle/caches/transforms-4/08a5c87c8b8ae2e447c478574aaf3a93/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.core:core-splashscreen:1.0.1] /home/ubuntu/.gradle/caches/transforms-4/08a5c87c8b8ae2e447c478574aaf3a93/transformed/core-splashscreen-1.0.1/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.annotation:annotation-experimental:1.4.0] /home/ubuntu/.gradle/caches/transforms-4/b602daaf2448be52ca00da64464dbe99/transformed/annotation-experimental-1.4.0/AndroidManifest.xml:5:5-44
 MERGED from [androidx.annotation:annotation-experimental:1.4.0] /home/ubuntu/.gradle/caches/transforms-4/b602daaf2448be52ca00da64464dbe99/transformed/annotation-experimental-1.4.0/AndroidManifest.xml:5:5-44
 MERGED from [androidx.compose.runtime:runtime-saveable-android:1.6.8] /home/ubuntu/.gradle/caches/transforms-4/6bef251489f0fc420fa1f568442a9df9/transformed/runtime-saveable-release/AndroidManifest.xml:5:5-44

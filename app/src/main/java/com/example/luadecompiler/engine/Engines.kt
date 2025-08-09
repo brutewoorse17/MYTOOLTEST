@@ -56,12 +56,34 @@ class UnluacEngine : DecompilerEngine {
 
   override suspend fun decompile(bytes: ByteArray): Result<String> = withContext(Dispatchers.IO) {
     try {
-      val clazz = try { Class.forName("unluac.Main") } catch (e: Throwable) { null }
-      if (clazz == null) {
-        return@withContext Result.failure(IllegalStateException("unluac.jar not found. Place unluac.jar into app/libs and rebuild."))
+      // Prefer direct API if present in the dependency
+      try {
+        val BHeader = Class.forName("unluac.parse.BHeader")
+        val LFunction = Class.forName("unluac.decompile.LFunction")
+        val Decompiler = Class.forName("unluac.decompile.Decompiler")
+        val DecompilerState = Class.forName("unluac.decompile.DecompilerState")
+
+        val headerCtor = BHeader.getConstructor(java.io.InputStream::class.java)
+        val header = headerCtor.newInstance(bytes.inputStream())
+        val lmainField = BHeader.getDeclaredField("lmain").apply { isAccessible = true }
+        val lmain = lmainField.get(header)
+
+        val state = DecompilerState.getDeclaredConstructor(BHeader).newInstance(header)
+        val decomp = Decompiler.getDeclaredConstructor(DecompilerState, LFunction).newInstance(state, lmain)
+        val out = java.io.ByteArrayOutputStream()
+        val pout = java.io.PrintStream(out)
+        val printMethod = Decompiler.getMethod("print", java.io.PrintStream::class.java)
+        printMethod.invoke(decomp, pout)
+        return@withContext Result.success(out.toString(Charsets.UTF_8.name()))
+      } catch (_: Throwable) {
+        // Fallback to invoking Main and capturing stdout
       }
 
-      // Write input bytes to a temp file
+      val mainClazz = try { Class.forName("unluac.Main") } catch (e: Throwable) { null }
+      if (mainClazz == null) {
+        return@withContext Result.failure(IllegalStateException("unluac not found. Ensure JitPack dep or libs/unluac.jar is present."))
+      }
+
       val tempIn: File = File.createTempFile("chunk", ".luac")
       tempIn.writeBytes(bytes)
 
@@ -74,8 +96,7 @@ class UnluacEngine : DecompilerEngine {
       try {
         System.setOut(psOut)
         System.setErr(psErr)
-        // Invoke unluac.Main.main(String[] args)
-        val method = clazz.getMethod("main", Array<String>::class.java)
+        val method = mainClazz.getMethod("main", Array<String>::class.java)
         method.invoke(null, arrayOf(tempIn.absolutePath))
       } finally {
         System.setOut(originalOut)

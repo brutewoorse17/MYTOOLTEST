@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.luadecompiler.app-mergeDebugResources-56:/values-hi/values-hi.xml",
+            "outputFile": "com.example.luadecompiler.app-mergeDebugResources-57:/values-hi/values-hi.xml",
             "map": [
                 {
                     "source": "/home/ubuntu/.gradle/caches/transforms-4/a46343d596cd2a9dc852dfbe04ee83f3/transformed/material3-release/res/values-hi/values-hi.xml",

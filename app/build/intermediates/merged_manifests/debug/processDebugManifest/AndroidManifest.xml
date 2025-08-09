@@ -23,7 +23,11 @@
         android:theme="@style/Theme.LuaDecompiler" >
         <activity
             android:name="com.example.luadecompiler.MainActivity"
-            android:exported="true" >
+            android:exported="false" />
+        <activity
+            android:name="com.example.luadecompiler.SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.LuaDecompiler" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.luadecompiler.app-mergeDebugResources-56:/values-bs/values-bs.xml",
+            "outputFile": "com.example.luadecompiler.app-mergeDebugResources-57:/values-bs/values-bs.xml",
             "map": [
                 {
                     "source": "/home/ubuntu/.gradle/caches/transforms-4/9c09bba0afbdcfa3f9923e85ee633245/transformed/ui-release/res/values-bs/values-bs.xml",
