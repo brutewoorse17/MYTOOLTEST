@@ -19,11 +19,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import com.example.luadecompiler.engine.EngineRouter
 import com.example.luadecompiler.engine.LuaBytecodeVersion
 import com.example.luadecompiler.engine.LuaDetector
 import com.example.luadecompiler.engine.DecompilerEngine
+import androidx.compose.runtime.rememberCoroutineScope
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +54,7 @@ private data class FileResult(
 private fun DecompilerScreen() {
   val context = LocalContext.current
   var results by remember { mutableStateOf(listOf<FileResult>()) }
+  val scope = rememberCoroutineScope()
 
   val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
     if (uris.isNullOrEmpty()) return@rememberLauncherForActivityResult
@@ -61,40 +63,42 @@ private fun DecompilerScreen() {
       results = results + FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Queued…")
     }
 
-    // Process sequentially to keep code simple
-    uris.forEach { uri ->
-      results = results.map {
-        if (it.uri == uri) it.copy(status = "Reading…") else it
-      }
-      val bytes = readAllBytes(context.contentResolver, uri)
-      val info = com.example.luadecompiler.engine.LuaDetector.detect(bytes)
-      val updated = when {
-        !info.isBytecode && info.version == LuaBytecodeVersion.UNKNOWN -> {
-          val text = bytes.decodeToString()
-          FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Plain text .lua", content = text)
+    // Process sequentially in a coroutine
+    scope.launch {
+      for (uri in uris) {
+        results = results.map {
+          if (it.uri == uri) it.copy(status = "Reading…") else it
         }
-        info.version == LuaBytecodeVersion.LUAJIT -> {
-          FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "LuaJIT bytecode detected — not supported yet", content = null)
-        }
-        else -> {
-          val engines = com.example.luadecompiler.engine.EngineRouter.enginesFor(info.version)
-          var success: Pair<String, String?>? = null
-          var lastError: String? = null
-          for (engine in engines) {
-            results = results.map { if (it.uri == uri) it.copy(status = "Trying ${engine.name}…") else it }
-            val res = runBlockingDecompile(bytes, engine)
-            if (res.second != null) { success = res; break } else { lastError = res.first }
+        val bytes = withContext(Dispatchers.IO) { readAllBytes(context.contentResolver, uri) }
+        val info = com.example.luadecompiler.engine.LuaDetector.detect(bytes)
+        val updated = when {
+          !info.isBytecode && info.version == LuaBytecodeVersion.UNKNOWN -> {
+            val text = bytes.decodeToString()
+            FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Plain text .lua", content = text)
           }
-          if (success != null) {
-            FileResult(uri, guessDisplayName(context.contentResolver, uri), status = success!!.first, content = success!!.second)
-          } else if (engines.isEmpty()) {
-            FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Unknown/unsupported bytecode", content = null)
-          } else {
-            FileResult(uri, guessDisplayName(context.contentResolver, uri), status = lastError ?: "Failed to decompile", content = null)
+          info.version == LuaBytecodeVersion.LUAJIT -> {
+            FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "LuaJIT bytecode detected — not supported yet", content = null)
+          }
+          else -> {
+            val engines = com.example.luadecompiler.engine.EngineRouter.enginesFor(info.version)
+            var success: Pair<String, String?>? = null
+            var lastError: String? = null
+            for (engine in engines) {
+              results = results.map { if (it.uri == uri) it.copy(status = "Trying ${engine.name}…") else it }
+              val res = runBlockingDecompile(bytes, engine)
+              if (res.second != null) { success = res; break } else { lastError = res.first }
+            }
+            if (success != null) {
+              FileResult(uri, guessDisplayName(context.contentResolver, uri), status = success!!.first, content = success!!.second)
+            } else if (engines.isEmpty()) {
+              FileResult(uri, guessDisplayName(context.contentResolver, uri), status = "Unknown/unsupported bytecode", content = null)
+            } else {
+              FileResult(uri, guessDisplayName(context.contentResolver, uri), status = lastError ?: "Failed to decompile", content = null)
+            }
           }
         }
+        results = results.map { if (it.uri == uri) updated else it }
       }
-      results = results.map { if (it.uri == uri) updated else it }
     }
   }
 
